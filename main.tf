@@ -63,24 +63,22 @@ resource "azurerm_subnet" "be_strong_app_subnet" {
 }
 
 # App Service Plan
-resource "azurerm_app_service_plan" "be_strong_asp" {
+resource "azurerm_service_plan" "be_strong_asp" {
   name                = "beStrongAppServicePlan"
   location            = azurerm_resource_group.bestrong_rg.location
   resource_group_name = azurerm_resource_group.bestrong_rg.name
-
-  sku {
-    tier = "Standard"
-    size = "S1"
-  }
+  os_type             = "Linux"
+  sku_name            = "B1"
 }
 
 
 # App Service
-resource "azurerm_app_service" "be_strong_as" {
+resource "azurerm_linux_web_app" "be_strong_as" {
   name                = "beStrongAppService"
   location            = azurerm_resource_group.bestrong_rg.location
   resource_group_name = azurerm_resource_group.bestrong_rg.name
-  app_service_plan_id = azurerm_app_service_plan.be_strong_asp.id
+  service_plan_id = azurerm_service_plan.be_strong_asp.id
+  site_config {}
 
 
     app_settings = {
@@ -89,20 +87,40 @@ resource "azurerm_app_service" "be_strong_as" {
    identity {
     type = "SystemAssigned"
   }
+
+  storage_account {
+    access_key   = azurerm_storage_account.be_strong_storage_account.primary_access_key
+    account_name = azurerm_storage_account.be_strong_storage_account.name
+    name         = "fileshare"
+    share_name   = "fileshare"
+    type         = "AzureFiles"
+    mount_path   = "/file-share"
+  }
+
 }
 
 resource "azurerm_app_service_virtual_network_swift_connection" "be_strong_vnet_swift_connection" {
-  app_service_id      = azurerm_app_service.be_strong_as.id
+  app_service_id      = azurerm_linux_web_app.be_strong_as.id
   subnet_id           = azurerm_subnet.be_strong_app_subnet.id
+}
+
+
+
+resource "azurerm_log_analytics_workspace" "be_strong_workspace" {
+  name                = "beStrongWorkspace"
+  location            = azurerm_resource_group.bestrong_rg.location
+  resource_group_name = azurerm_resource_group.bestrong_rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
 }
 
 resource "azurerm_application_insights" "app_insights" {
   name                = "beStrongAppInsights"
   location            = azurerm_resource_group.bestrong_rg.location
   resource_group_name = azurerm_resource_group.bestrong_rg.name
+  workspace_id        = azurerm_log_analytics_workspace.be_strong_workspace.id
   application_type    = "web"
 }
-
 
 
 # Random String
@@ -125,7 +143,7 @@ resource "azurerm_container_registry" "be_strong_acr" {
 resource "azurerm_role_assignment" "appservice_acr_pull" {
   scope                = azurerm_container_registry.be_strong_acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_app_service.be_strong_as.identity[0].principal_id
+  principal_id         = azurerm_linux_web_app.be_strong_as.identity[0].principal_id
 }
 
 
@@ -169,7 +187,7 @@ resource "azurerm_key_vault" "be_strong_kv" {
 resource "azurerm_key_vault_access_policy" "app_service_access" {
   key_vault_id = azurerm_key_vault.be_strong_kv.id
   tenant_id    = var.tenant_id
-  object_id    = azurerm_app_service.be_strong_as.identity[0].principal_id
+  object_id    = azurerm_linux_web_app.be_strong_as.identity[0].principal_id
 
   key_permissions = [
     "Get",
@@ -193,7 +211,7 @@ resource "azurerm_subnet" "be_strong_mssql_subnet" {
   }
 
 
-resource "azurerm_sql_server" "be_strong_sql_server" {
+resource "azurerm_mssql_server" "be_strong_sql_server" {
   name                         = "bestrongsqlserver123"
   resource_group_name          = azurerm_resource_group.bestrong_rg.name
   location                     = azurerm_resource_group.bestrong_rg.location
@@ -204,7 +222,7 @@ resource "azurerm_sql_server" "be_strong_sql_server" {
 
 resource "azurerm_mssql_database" "be_strong_sql_db" {
   name           = "beStrongSqlDb"
-  server_id      = azurerm_sql_server.be_strong_sql_server.id
+  server_id      = azurerm_mssql_server.be_strong_sql_server.id
   sku_name       = "S0"
   max_size_gb    = 2
 }
@@ -219,7 +237,7 @@ resource "azurerm_private_endpoint" "be_strong_sql_private_endpoint" {
 
   private_service_connection {
     name                           = "beStrongSqlPrivateServiceConnection"
-    private_connection_resource_id = azurerm_sql_server.be_strong_sql_server.id
+    private_connection_resource_id = azurerm_mssql_server.be_strong_sql_server.id
     is_manual_connection           = false
     subresource_names              = ["sqlServer"]
   }
