@@ -14,6 +14,7 @@ terraform {
 
 provider "azurerm" {
   features {}
+  
 }
 
 resource "random_string" "resource_code" {
