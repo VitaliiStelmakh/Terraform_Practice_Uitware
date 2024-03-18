@@ -37,3 +37,8 @@ steps:
       -var "sql_server_password=$(sql_server_password)"
   displayName: 'Terraform Plan'
 
+  env:
+    ARM_SUBSCRIPTION_ID: $(subscription_id)
+    ARM_CLIENT_ID: $(client_id)
+    ARM_CLIENT_SECRET: $(client_secret)
+    ARM_TENANT_ID: $(tenant_id)
