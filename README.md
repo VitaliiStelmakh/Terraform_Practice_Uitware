@@ -1,1 +1,1 @@
-# CI/CD Terraform_Practice_Uitware
+# Terraform_Practice_Uitware
