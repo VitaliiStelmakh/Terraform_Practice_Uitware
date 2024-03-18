@@ -1,6 +1,7 @@
-trigger: none
 pr:
-  - main
+  branches:
+    include:
+    - main
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -8,7 +9,10 @@ pool:
 steps:
 - script: |
     echo "Initializing Terraform..."
-    terraform init -backend-config="storage_account_name=tfstateuvqbm" -backend-config="container_name=tfstate" -backend-config="access_key=$(StorageAccountAccessKey)" -backend-config="key=terraform.tfstate"
+    terraform init -backend-config="storage_account_name=tfstateuvqbm" \
+     -backend-config="container_name=tfstate" \
+     -backend-config="access_key=$(StorageAccountAccessKey)" \
+     -backend-config="key=terraform.tfstate"
   displayName: 'Terraform Init'
 
 - script: |
