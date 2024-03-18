@@ -27,5 +27,11 @@ steps:
 
 - script: |
     echo "Generating Terraform plan..."
-    terraform plan -var 'subscription_id=$(subscription_id)' -var 'client_id=$(client_id)' -var 'client_secret=$(client_secret)' -var 'tenant_id=$(tenant_id) -var 'sql_server_login=$(sql_server_login)' -var 'sql_server_password=$(sql_server_password)' 
+    terraform plan -out=$(planOutput) \
+      -var "subscription_id=$(subscription_id)" \
+      -var "client_id=$(client_id)" \
+      -var "client_secret=$(client_secret)" \
+      -var "tenant_id=$(tenant_id)" \
+      -var "sql_server_login=$(sql_server_login)" \
+      -var "sql_server_password=$(sql_server_password)"
   displayName: 'Terraform Plan'
