@@ -10,13 +10,6 @@ variables:
 
 steps:
 - script: |
-    echo "Installing Terraform version $(terraformVersion)..."
-    wget https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
-    unzip terraform_$(terraformVersion)_linux_amd64.zip
-    sudo mv terraform /usr/local/bin/
-  displayName: 'Install Terraform'
-
-- script: |
     echo "Initializing Terraform..."
     terraform init -backend-config="storage_account_name=tfstateuvqbm" -backend-config="container_name=tfstate" -backend-config="access_key=$(StorageAccountAccessKey)" -backend-config="key=terraform.tfstate"
   displayName: 'Terraform Init'
