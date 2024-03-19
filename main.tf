@@ -96,10 +96,10 @@ resource "azurerm_linux_web_app" "be_strong_as" {
 
 }
 
-# resource "azurerm_app_service_virtual_network_swift_connection" "be_strong_vnet_swift_connection" {
-#   app_service_id      = azurerm_linux_web_app.be_strong_as.id
-#   subnet_id           = azurerm_subnet.be_strong_app_subnet.id
-# }
+resource "azurerm_app_service_virtual_network_swift_connection" "be_strong_vnet_swift_connection" {
+  app_service_id      = azurerm_linux_web_app.be_strong_as.id
+  subnet_id           = azurerm_subnet.be_strong_app_subnet.id
+}
 
 
 
