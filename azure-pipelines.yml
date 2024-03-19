@@ -1,15 +1,21 @@
 trigger:
-- main
-pr: none
+  branches:
+    include:
+    - main
+
+pr:
+  branches:
+    include:
+    - main
+
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
   - group: Terraform
-  
+
 steps:
 - script: |
-    script: |
     echo "Initializing Terraform..."
     terraform init -backend-config="storage_account_name=tfstateuvqbm" \
      -backend-config="container_name=tfstate" \
@@ -23,6 +29,23 @@ steps:
   displayName: 'Terraform Validate'
 
 - script: |
+    echo "Generating Terraform plan..."
+    terraform plan \
+      -var "subscription_id=$(subscription_id)" \
+      -var "client_id=$(client_id)" \
+      -var "client_secret=$(client_secret)" \
+      -var "tenant_id=$(tenant_id)" \
+      -var "sql_server_login=$(sql_server_login)" \
+      -var "sql_server_password=$(sql_server_password)"
+  displayName: 'Terraform Plan'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  env:
+    ARM_SUBSCRIPTION_ID: $(subscription_id)
+    ARM_CLIENT_ID: $(client_id)
+    ARM_CLIENT_SECRET: $(client_secret)
+    ARM_TENANT_ID: $(tenant_id)
+
+- script: |
     echo "Applying Terraform changes directly..."
     terraform apply -auto-approve \
       -var "subscription_id=$(subscription_id)" \
@@ -32,6 +55,7 @@ steps:
       -var "sql_server_login=$(sql_server_login)" \
       -var "sql_server_password=$(sql_server_password)"
   displayName: 'Terraform Apply'
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
   env:
     ARM_SUBSCRIPTION_ID: $(subscription_id)
     ARM_CLIENT_ID: $(client_id)
